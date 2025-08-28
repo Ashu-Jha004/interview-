@@ -1,103 +1,129 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useEffect, useState, useCallback } from "react";
+import { Navbar } from "@/components/navbar";
+import { Sidebar } from "@/components/sidebar";
+import { StatsCards } from "@/components/stats-cards";
+import { TaskControls } from "@/components/task-controls";
+import { TaskList } from "@/components/task-list";
+import { TaskCards } from "@/components/task-cards";
+import { SearchDialog } from "@/components/search-dialog";
+import { useTaskStore } from "@/lib/store/tasks";
+import type { Task } from "@/types/task";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const viewMode = useTaskStore((state) => state.viewMode);
+  const sidebarOpen = useTaskStore((state) => state.sidebarOpen);
+  const toggleSidebar = useTaskStore((state) => state.toggleSidebar);
+  const setSearchQuery = useTaskStore((state) => state.setSearchQuery);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchDialogOpen(true);
+      }
+
+      if (e.key === "Escape" && sidebarOpen && window.innerWidth < 1024) {
+        toggleSidebar();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen, toggleSidebar]);
+
+  const handleOverlayClick = useCallback(() => {
+    toggleSidebar();
+  }, [toggleSidebar]);
+
+  const handleSearchTaskSelect = useCallback(
+    (task: Task) => {
+      setSearchQuery(task.title);
+    },
+    [setSearchQuery]
+  );
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="h-16 bg-card border-b animate-pulse"></div>
+        <div className="animate-pulse p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-card rounded-lg"></div>
+            ))}
+          </div>
+          <div className="h-96 bg-card rounded-lg"></div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navbar - Fixed */}
+      <header className="sticky top-0 z-50">
+        <Navbar />
+      </header>
+
+      {/* Main Layout */}
+      <div className="flex">
+        {/* Desktop Sidebar - Conditional */}
+        {sidebarOpen && (
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-16 h-[calc(100vh-4rem)]">
+              <Sidebar />
+            </div>
+          </aside>
+        )}
+
+        {/* Main Content - Always Scrollable */}
+        <main className="flex-1 min-w-0">
+          <div className="p-4 lg:p-6">
+            <StatsCards />
+          </div>
+
+          <div className="px-4 lg:px-6 pb-8">
+            <div className="mb-4">
+              <TaskControls />
+            </div>
+
+            <div>{viewMode === "list" ? <TaskList /> : <TaskCards />}</div>
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          {/* Backdrop with Tailwind backdrop-blur */}
+          <div
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={handleOverlayClick}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          {/* Sidebar */}
+          <div className="absolute left-0 top-0 bottom-0 w-64">
+            <Sidebar />
+          </div>
+        </div>
+      )}
+
+      {/* Search Dialog */}
+      <SearchDialog
+        isOpen={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        onTaskSelect={handleSearchTaskSelect}
+      />
     </div>
   );
 }
