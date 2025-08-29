@@ -181,9 +181,9 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
         updateTask({
           id: task.id,
           ...submitData,
-        } as any);
+        } as Task);
       } else {
-        addTask(submitData as any);
+        addTask(submitData as FormData);
       }
 
       onClose();
