@@ -76,9 +76,6 @@ export function Navbar() {
             <button
               onClick={handleToggleSidebar}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg focus-visible-ring transition-colors"
-              aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-              aria-expanded={sidebarOpen}
-              aria-controls="sidebar"
               title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               <MenuIcon className="h-5 w-5" />
@@ -168,11 +165,10 @@ export function Navbar() {
             {searchQuery && (
               <div className="sm:hidden mt-1 flex items-center justify-between text-xs">
                 <span className="text-blue-600 font-medium">
-                  Active search: 
+                  Active search:
                   {searchQuery.length > 20
                     ? searchQuery.substring(0, 20) + "..."
                     : searchQuery}
-                  
                 </span>
                 <button
                   onClick={handleClearSearch}
