@@ -168,11 +168,11 @@ export function Navbar() {
             {searchQuery && (
               <div className="sm:hidden mt-1 flex items-center justify-between text-xs">
                 <span className="text-blue-600 font-medium">
-                  Active search: "
+                  Active search: 
                   {searchQuery.length > 20
                     ? searchQuery.substring(0, 20) + "..."
                     : searchQuery}
-                  "
+                  
                 </span>
                 <button
                   onClick={handleClearSearch}

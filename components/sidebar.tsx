@@ -74,27 +74,20 @@ export function Sidebar() {
   const toggleSidebar = useTaskStore((state) => state.toggleSidebar);
   const taskStats = useTaskStore((state) => state.taskStats);
 
-  // Focus management for mobile sidebar - NO scroll locking
   useEffect(() => {
     if (sidebarOpen && window.innerWidth < 1024) {
-      const timer = setTimeout(() => {
-        firstButtonRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => firstButtonRef.current?.focus(), 100);
       return () => clearTimeout(timer);
     }
   }, [sidebarOpen]);
 
-  // Handle keyboard navigation - NO scroll locking
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Escape" && window.innerWidth < 1024) {
-        toggleSidebar();
-      }
+      if (e.key === "Escape" && window.innerWidth < 1024) toggleSidebar();
     },
     [toggleSidebar]
   );
 
-  // Update item counts based on stats
   const enhancedItems = sidebarItems.map((item) => {
     let count = null;
     if (item.label === "Due Today") count = taskStats.dueToday;
@@ -106,12 +99,11 @@ export function Sidebar() {
     <aside
       ref={sidebarRef}
       id="sidebar"
-      className="w-64 bg-white border-r border-gray-200 shadow-lg lg:shadow-none
-                 h-screen lg:h-[calc(100vh-4rem)] flex flex-col"
+      className="w-64 bg-white border-r border-gray-200 shadow-lg lg:shadow-none h-screen lg:h-[calc(100vh-4rem)] flex flex-col"
       onKeyDown={handleKeyDown}
       aria-label="Main navigation"
     >
-      {/* Sidebar Header - Fixed */}
+      {/* Header */}
       <div className="flex-none p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div>
@@ -128,29 +120,31 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Sidebar Menu - Scrollable with mobile touch support */}
+      {/* Menu */}
       <nav
         ref={navigationRef}
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 mobile-scroll"
         aria-label="Sidebar navigation"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <ul className="space-y-1" role="list">
+        <ul className="space-y-1" role="menu">
           {enhancedItems.map((item, index) => {
             const Icon = item.icon;
             return (
               <li key={item.label} role="none">
                 <button
-                  ref={index === 0 ? firstButtonRef : undefined}
-                  className={`
-                    group w-full flex items-center justify-between px-3 py-3 rounded-lg text-left transition-all duration-200
-                    focus-visible-ring
+                  ref={
+                    index === 0
+                      ? (firstButtonRef as React.RefObject<HTMLButtonElement>)
+                      : undefined
+                  }
+                  className={`group w-full flex items-center justify-between px-3 py-3 rounded-lg text-left transition-all duration-200 focus-visible-ring
                     ${
                       item.active
                         ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
                         : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent hover:border-gray-200"
-                    }
-                  `}
+                    }`}
+                  role="menuitem"
                   aria-current={item.active ? "page" : undefined}
                   aria-describedby={`${item.label
                     .toLowerCase()
@@ -159,14 +153,11 @@ export function Sidebar() {
                 >
                   <div className="flex items-center space-x-3 min-w-0">
                     <Icon
-                      className={`
-                      h-5 w-5 flex-shrink-0 transition-colors
-                      ${
+                      className={`h-5 w-5 flex-shrink-0 transition-colors ${
                         item.active
                           ? "text-blue-600"
                           : "text-gray-500 group-hover:text-gray-700"
-                      }
-                    `}
+                      }`}
                     />
                     <span className="font-medium truncate">{item.label}</span>
                   </div>
@@ -174,27 +165,22 @@ export function Sidebar() {
                   <div className="flex items-center space-x-2 flex-shrink-0">
                     {item.count !== null && (
                       <span
-                        className={`
-                        inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-medium rounded-full
+                        className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-medium rounded-full
                         ${
                           item.active
                             ? "bg-blue-100 text-blue-700"
                             : "bg-gray-100 text-gray-600 group-hover:bg-gray-200"
-                        }
-                      `}
+                        }`}
                       >
                         {item.count}
                       </span>
                     )}
                     <ChevronRight
-                      className={`
-                      h-4 w-4 transition-transform duration-200 
-                      ${
+                      className={`h-4 w-4 transition-transform duration-200 ${
                         item.active
                           ? "text-blue-600 rotate-90"
                           : "text-gray-400 group-hover:text-gray-600"
-                      }
-                    `}
+                      }`}
                     />
                   </div>
                 </button>
@@ -210,7 +196,7 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Quick Stats Section - Fixed */}
+      {/* Quick Stats */}
       <div className="flex-none p-4 border-t border-gray-200 bg-gray-50">
         <h3 className="text-sm font-semibold text-gray-900 mb-2">
           Quick Stats
@@ -231,7 +217,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Sidebar Footer - Fixed */}
+      {/* Footer */}
       <div className="flex-none p-4 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -248,4 +234,3 @@ export function Sidebar() {
     </aside>
   );
 }
-  

@@ -31,11 +31,7 @@ interface SearchDialogProps {
 const RECENT_SEARCHES_KEY = "taskManager_recentSearches";
 const MAX_RECENT_SEARCHES = 5;
 
-export function SearchDialog({
-  isOpen,
-  onClose,
-  onTaskSelect,
-}: SearchDialogProps) {
+export function SearchDialog({ isOpen, onClose }: SearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Task[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -59,6 +55,7 @@ export function SearchDialog({
           setRecentSearches(JSON.parse(saved));
         } catch (e) {
           setRecentSearches([]);
+          console.error("Failed to parse recent searches from localStorage", e);
         }
       }
 

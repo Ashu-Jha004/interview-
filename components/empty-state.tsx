@@ -2,6 +2,21 @@
 
 import { Plus, Search, Filter, CheckCircle2 } from "lucide-react";
 
+interface ActionConfig {
+  label: string;
+  onClick?: () => void;
+  variant: "primary" | "secondary";
+  icon?: React.ElementType;
+}
+
+interface EmptyStateConfig {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  primaryAction?: ActionConfig;
+  secondaryAction?: ActionConfig;
+}
+
 interface EmptyStateProps {
   type: "no-tasks" | "no-search-results" | "no-filter-results" | "all-complete";
   searchQuery?: string;
@@ -23,7 +38,7 @@ export function EmptyState({
   onClearFilters,
   onClearSearch,
 }: EmptyStateProps) {
-  const configs = {
+  const configs: Record<string, EmptyStateConfig> = {
     "no-tasks": {
       icon: Plus,
       title: "No tasks yet",
@@ -32,7 +47,8 @@ export function EmptyState({
       primaryAction: {
         label: "Create Task",
         onClick: onCreateTask,
-        variant: "primary" as const,
+        variant: "primary",
+        icon: Plus,
       },
     },
     "no-search-results": {
@@ -42,12 +58,14 @@ export function EmptyState({
       primaryAction: {
         label: "Clear Search",
         onClick: onClearSearch,
-        variant: "secondary" as const,
+        variant: "secondary",
+        icon: XIcon,
       },
       secondaryAction: {
         label: "Create Task",
         onClick: onCreateTask,
-        variant: "primary" as const,
+        variant: "primary",
+        icon: Plus,
       },
     },
     "no-filter-results": {
@@ -57,12 +75,14 @@ export function EmptyState({
       primaryAction: {
         label: "Clear Filters",
         onClick: onClearFilters,
-        variant: "secondary" as const,
+        variant: "secondary",
+        icon: XIcon,
       },
       secondaryAction: {
         label: "Create Task",
         onClick: onCreateTask,
-        variant: "primary" as const,
+        variant: "primary",
+        icon: Plus,
       },
     },
     "all-complete": {
@@ -73,7 +93,8 @@ export function EmptyState({
       primaryAction: {
         label: "Create Task",
         onClick: onCreateTask,
-        variant: "primary" as const,
+        variant: "primary",
+        icon: Plus,
       },
     },
   };
@@ -96,40 +117,61 @@ export function EmptyState({
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-        {config.primaryAction && (
+        {config.primaryAction && config.primaryAction.onClick && (
           <button
             onClick={config.primaryAction.onClick}
-            className={`
-              inline-flex items-center px-6 py-3 text-sm font-medium rounded-lg focus-visible-ring transition-colors
-              ${
-                config.primaryAction.variant === "primary"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }
-            `}
+            className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-lg focus-visible-ring transition-colors ${
+              config.primaryAction.variant === "primary"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
-            <Icon className="h-4 w-4 mr-2" aria-hidden="true" />
+            {config.primaryAction.icon && (
+              <config.primaryAction.icon
+                className="h-4 w-4 mr-2"
+                aria-hidden="true"
+              />
+            )}
             {config.primaryAction.label}
           </button>
         )}
 
-        {config.secondaryAction && (
+        {config.secondaryAction && config.secondaryAction.onClick && (
           <button
             onClick={config.secondaryAction.onClick}
-            className={`
-              inline-flex items-center px-6 py-3 text-sm font-medium rounded-lg focus-visible-ring transition-colors
-              ${
-                config.secondaryAction.variant === "primary"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }
-            `}
+            className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-lg focus-visible-ring transition-colors ${
+              config.secondaryAction.variant === "primary"
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
-            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+            {config.secondaryAction.icon && (
+              <config.secondaryAction.icon
+                className="h-4 w-4 mr-2"
+                aria-hidden="true"
+              />
+            )}
             {config.secondaryAction.label}
           </button>
         )}
       </div>
     </div>
+  );
+}
+
+// Additional icons for action buttons
+function XIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      {...props}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 18L18 6M6 6l12 12" />
+    </svg>
   );
 }

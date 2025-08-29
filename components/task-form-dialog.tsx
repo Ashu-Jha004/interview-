@@ -1,15 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  X,
-  Calendar,
-  User,
-  Flag,
-  FileText,
-  Save,
-  AlertCircle,
-} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { X, Calendar, User, Flag, Save, AlertCircle } from "lucide-react";
 import { useTaskStore } from "@/lib/store/tasks";
 import { CreateTaskSchema, UpdateTaskSchema } from "@/lib/schemas/task";
 import type { Task, TaskStatus, TaskPriority } from "@/types/task";
@@ -24,7 +16,7 @@ interface TaskFormDialogProps {
 type FormData = {
   title: string;
   description: string;
-  dueDate: string;
+  dueDate: string; // YYYY-MM-DD (date input)
   status: TaskStatus;
   priority: TaskPriority;
   customer: string;
@@ -46,8 +38,8 @@ const priorityOptions: { value: TaskPriority; label: string }[] = [
 ];
 
 export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   const { addTask, updateTask } = useTaskStore();
 
@@ -73,7 +65,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
         setFormData({
           title: task.title,
           description: task.description || "",
-          dueDate: task.dueDate ? task.dueDate.split("T")[0] : "", // Convert to date input format
+          dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
           status: task.status,
           priority: task.priority,
           customer: task.customer || "",
@@ -99,7 +91,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
     }
   }, [isOpen, task]);
 
-  // Handle ESC key
+  // Handle ESC key to close
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -124,8 +116,12 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
     };
   }, [isOpen]);
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // More flexible typing: accept any value (selects give string), then cast.
+  const handleInputChange = (field: keyof FormData, value: unknown) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value as FormData[typeof field],
+    }));
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -149,13 +145,18 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
       setErrors({});
       return true;
     } catch (error) {
+      // Proper zod handling: use .issues and typed ZodIssue
       if (error instanceof z.ZodError) {
         const newErrors: FormErrors = {};
-        error.errors.forEach((err) => {
-          const field = err.path[0] as keyof FormData;
-          newErrors[field] = err.message;
+        error.issues.forEach((issue: z.ZodIssue) => {
+          const field = issue.path[0] as keyof FormData;
+          if (field) {
+            newErrors[field] = issue.message;
+          }
         });
         setErrors(newErrors);
+      } else {
+        console.error("Unexpected validation error:", error);
       }
       return false;
     }
@@ -180,15 +181,15 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
         updateTask({
           id: task.id,
           ...submitData,
-        });
+        } as any);
       } else {
-        addTask(submitData);
+        addTask(submitData as any);
       }
 
       onClose();
     } catch (error) {
       console.error("Failed to save task:", error);
-      // In a real app, you'd show a toast notification here
+      // Real app: show toast or inline error
     } finally {
       setIsSubmitting(false);
     }
@@ -204,7 +205,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-200"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -212,7 +213,8 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        // responsive widths + simple scale/opacity transition for open state
+        className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-200 ease-out scale-100 opacity-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -222,8 +224,9 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded focus-visible-ring"
+            className="text-gray-400 hover:text-gray-600 p-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
             aria-label="Close dialog"
+            title="Close"
           >
             <X className="h-5 w-5" />
           </button>
@@ -245,7 +248,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
               type="text"
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.title ? "border-red-300" : "border-gray-300"
               }`}
               placeholder="Enter task title..."
@@ -275,7 +278,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Add a description..."
             />
           </div>
@@ -295,7 +298,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
                 type="text"
                 value={formData.customer}
                 onChange={(e) => handleInputChange("customer", e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter customer name..."
               />
             </div>
@@ -316,7 +319,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.dueDate ? "border-red-300" : "border-gray-300"
                 }`}
                 aria-describedby={errors.dueDate ? "dueDate-error" : undefined}
@@ -346,8 +349,10 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
               <select
                 id="status"
                 value={formData.status}
-                onChange={(e) => handleInputChange("status", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  handleInputChange("status", e.target.value as TaskStatus)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -371,9 +376,12 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
                   id="priority"
                   value={formData.priority}
                   onChange={(e) =>
-                    handleInputChange("priority", e.target.value)
+                    handleInputChange(
+                      "priority",
+                      e.target.value as TaskPriority
+                    )
                   }
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg transition-shadow duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                 >
                   {priorityOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -390,7 +398,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible-ring"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
               disabled={isSubmitting}
             >
               Cancel
@@ -398,7 +406,7 @@ export function TaskFormDialog({ isOpen, onClose, task }: TaskFormDialogProps) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus-visible-ring disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
