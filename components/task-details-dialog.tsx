@@ -57,6 +57,7 @@ export function TaskDetailsDialog({
     if (task) {
       toggleTaskStatus(task.id);
     }
+    onClose();
   }, [task, toggleTaskStatus]);
 
   if (!task) return null;
