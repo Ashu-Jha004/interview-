@@ -18,7 +18,10 @@ export const getStatusInfo = (task: Task) => {
     };
   }
 
-  const statusMap = {
+  const statusMap: Record<
+    Exclude<Task["status"], "overdue">,
+    { label: string; color: string; icon: typeof Clock | typeof CheckCircle }
+  > = {
     pending: {
       label: "Pending",
       color: "bg-blue-100 text-blue-800 border-blue-200",
@@ -35,6 +38,16 @@ export const getStatusInfo = (task: Task) => {
       icon: CheckCircle,
     },
   };
+
+  if (task.status === "overdue") {
+    // Fallback if somehow status is set manually
+    return {
+      status: "overdue" as const,
+      label: "Overdue",
+      color: "bg-red-100 text-red-800 border-red-200",
+      icon: AlertTriangle,
+    };
+  }
 
   return {
     status: task.status,
