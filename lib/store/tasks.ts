@@ -133,7 +133,7 @@ const computeFilteredTasks = (
   filterStatus: TaskStatus[],
   filterPriority: TaskPriority[]
 ): Task[] => {
-  let filtered = tasks.filter((task) => {
+  const filtered = tasks.filter((task) => {
     // Search filter
     const searchMatch =
       !searchQuery ||

@@ -33,7 +33,6 @@ interface EmptyStateProps {
 export function EmptyState({
   type,
   searchQuery,
-  hasFilters,
   onCreateTask,
   onClearFilters,
   onClearSearch,

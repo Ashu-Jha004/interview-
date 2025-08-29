@@ -37,6 +37,10 @@ export function ModalBase({
     full: "max-w-[95vw] lg:max-w-6xl",
   };
 
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
   // Enhanced body scroll lock with scroll position preservation
   useEffect(() => {
     if (isOpen) {
@@ -65,7 +69,7 @@ export function ModalBase({
         window.scrollTo(0, scrollY);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Handle keyboard events
   useEffect(() => {
@@ -82,11 +86,7 @@ export function ModalBase({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
-
-  const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+  }, [isOpen, handleClose]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
